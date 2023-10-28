@@ -40,10 +40,23 @@ ORDER BY salary DESC
 
 -- 4. Using the fielding table, group players into three groups based on their position: label players with position OF as "Outfield", those with position "SS", "1B", "2B", and "3B" as "Infield", and those with position "P" or "C" as "Battery". Determine the number of putouts made by each of these three groups in 2016.
    
-SELECT *
+WITH CTE AS
+(SELECT   pos, SUM(po) as putouts,
+CASE WHEN pos = 'OF' THEN 'Outfield'
+	 WHEN pos = 'SS' THEN 'Infield'
+	 WHEN pos = '1B' THEN 'Infield'
+	 WHEN pos = '2B' THEN 'Infield'
+	 WHEN pos = '3B' THEN 'Infield'
+	 WHEN pos= 'C' THEN 'Battery'
+	 WHEN pos ='P' THEN 'Battery'
+END AS group_players
 FROM fielding
-JOIN appearances
-USING (playerid)
+WHERE yearid ='2016'
+GROUP BY  pos)
+SELECT group_players, putouts
+FROM cte
+
+--- Outfield: 29560, Battery: 41424, Infield: 58934
 
    
 -- 5. Find the average number of strikeouts per game by decade since 1920. Round the numbers you report to 2 decimal places. Do the same for home runs per game. Do you see any trends?
@@ -59,6 +72,18 @@ USING (playerid)
 
 
 -- 9. Which managers have won the TSN Manager of the Year award in both the National League (NL) and the American League (AL)? Give their full name and the teams that they were managing when they won the award.
+SELECT  namefirst, namelast, teamid
+FROM people as p
+JOIN appearances as a
+USING (playerid)
+JOIN awardsmanagers as am
+USING (playerid)
+WHERE am.lgid IN ('AL', 'NL')
+GROUP BY namefirst, namelast, teamid
+HAVING COUNT(DISTINCT am.lgid)=2
+
+
+-- Bob Melvin, Bobby Cox, Davey Johnson, Lou Priniella, Tony LaRussa
 
 
 -- 10. Find all players who hit their career highest number of home runs in 2016. Consider only players who have played in the league for at least 10 years, and who hit at least one home run in 2016. Report the players' first and last names and the number of home runs they hit in 2016.
