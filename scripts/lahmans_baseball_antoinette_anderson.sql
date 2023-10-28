@@ -62,8 +62,38 @@ FROM cte
 -- 5. Find the average number of strikeouts per game by decade since 1920. Round the numbers you report to 2 decimal places. Do the same for home runs per game. Do you see any trends?
    
 
+WITH averages_table AS
+(SELECT g, ROUND(AVG(so),2) as avg_so, ROUND(AVG(hr),2) as avg_hr,
+CASE WHEN yearid BETWEEN 1920 AND 1929 THEN '1920s'
+	 WHEN yearid BETWEEN 1930 AND 1939 THEN '1930s'
+	 WHEN yearid BETWEEN 1940 AND 1949 THEN '1940s'
+	 WHEN yearid BETWEEN 1950 AND 1959 THEN '1950s'
+	 WHEN yearid BETWEEN 1960 AND 1969 THEN '1960s'
+	 WHEN yearid BETWEEN 1970 AND 1979 THEN '1970s'
+	 WHEN yearid BETWEEN 1980 AND 1989 THEN '1980s'
+	 WHEN yearid BETWEEN 1990 and 1999 THEN '1990s'
+	 WHEN yearid BETWEEN 2000 AND 2009 THEN '2000s'
+	 WHEN yearid BETWEEN 2010 AND 2016 THEN '2010s'
+	 END AS decade
+FROM batting
+WHERE yearid BETWEEN 1920 AND 2016
+GRoUP BY g, decade
+ORDER BY decade)
+SELECT SUM(averages_table.g) as games, ROUND(SUM(averages_table.avg_hr/100),1)as avg_homerun, ROUND(SUM(averages_table.avg_so/100 ),1) as average_strikeouts
+, decade
+FROM averages_table
+GROUP BY decade
+																						  
 -- 6. Find the player who had the most success stealing bases in 2016, where __success__ is measured as the percentage of stolen base attempts which are successful. (A stolen base attempt results either in a stolen base or being caught stealing.) Consider only players who attempted _at least_ 20 stolen bases.
-	
+SELECT namefirst, namelast, yearid, sb, cs, sb+cs as total
+FROM people
+JOIN batting
+USING (playerid)
+WHERE yearid = 2016
+ORDER BY sb DESC
+LIMIT 1;
+
+
 
 -- 7.  From 1970 – 2016, what is the largest number of wins for a team that did not win the world series? What is the smallest number of wins for a team that did win the world series? Doing this will probably result in an unusually small number of wins for a world series champion – determine why this is the case. Then redo your query, excluding the problem year. How often from 1970 – 2016 was it the case that a team with the most wins also won the world series? What percentage of the time?
 SELECT name, w, l, w+l as total_games
