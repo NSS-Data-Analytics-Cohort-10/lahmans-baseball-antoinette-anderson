@@ -6,20 +6,13 @@ ORDER BY year;
 -- 1871-2016 
 
 -- 2. Find the name and height of the shortest player in the database. How many games did he play in? What is the name of the team for which he played?
-SELECT DISTINCT namefirst, namelast, height, a.teamid, t.name, hg.games 
-FROM people as p
+
+SELECT namefirst, namelast, height, g_all, teamid
+FrOM people as p
 JOIN appearances as a
-USING (playerid)
-JOIN teams as t
-USING(teamid)
-FULL JOIN homegames as h
-ON p.namefirst = h.games
-ORDER BY height;
-
-
-
-
-
+USING(playerid)
+WHERE height < 60
+ORDER BY height 
 
 -- 3. Find all players in the database who played at Vanderbilt University. Create a list showing each player’s first and last names as well as the total salary they earned in the major leagues. Sort this list in descending order by the total salary earned. Which Vanderbilt player earned the most money in the majors?
 SELECT p.namefirst, p.namelast, MAX(c.yearid) as year, s.schoolname, MAX(ss.salary) AS salary
@@ -53,8 +46,9 @@ END AS group_players
 FROM fielding
 WHERE yearid ='2016'
 GROUP BY  pos)
-SELECT group_players, putouts
+SELECT group_players, SUM(putouts) as putouts_total
 FROM cte
+GROUP BY group_players
 
 --- Outfield: 29560, Battery: 41424, Infield: 58934
 
@@ -180,3 +174,60 @@ WHERE b.yearid = 2016
 AND debut <= '2006-12-31'
 AND hr >= '1'
 ORDER by hr DESC;
+
+
+
+-- 11.Is there any correlation between number of wins and team salary? Use data from 2000 and later to answer this question. As you do this analysis, keep in mind that salaries across the whole league tend to increase together, so you may want to look on a year-by-year basis.
+SELECT DISTINCT name, w, SUM(salary )as team_salary,t.yearid
+FROM teams as t
+JOIN salaries
+USING(teamid)
+WHERE t.yearid >= 2000
+GROUP BY name, w, t.yearid
+ORDER BY t.yearid;
+
+-- There is no correlation between number of wins and team salary. Some total salaries are higher with less wins.
+
+-- 12. In this question, you will explore the connection between number of wins and attendance.
+--  <ol type="a">
+--    <li>Does there appear to be any correlation between attendance at home games and number of wins? </li>
+--    <li>Do teams that win the world series see a boost in attendance the following year? What about teams that made the playoffs? Making the playoffs means either being a division winner or a wild card winner.</li>
+--  </ol>
+
+SELECT DISTINCT name, w, divwin, wcwin, wswin, h.attendance,  h.park, yearid
+FROM teams as t
+FULL JOIN homegames as h
+ON t.yearid = h.year
+WHERE yearid > 1903
+AND wswin IS NOT NULL
+AND divwin IS NOT NULL
+AND wcwin IS NOT NULL
+AND h.attendance > 1
+ORDER BY yearid;
+
+-- There is no corrolation between attendance and home games. It seems regardles attandance was steady.
+
+--13. It is thought that since left-handed pitchers are more rare, causing batters to face them less often, that they are more effective. Investigate this claim and present evidence to either support or dispute this claim. First, determine just how rare left-handed pitchers are compared with right-handed pitchers. Are left-handed pitchers more likely to win the Cy Young Award? Are they more likely to make it into the hall of fame?
+SELECT COUNT(throws) as left_pitchers
+FrOM people
+WHERE throws = 'L'
+UNION ALL
+SELECT COUNT(throws) as right_pitchers
+FROM people
+Where throws ='R'
+
+
+SELECT namefirst, namelast, throws, awardid, inducted
+FrOM people
+JOIN awardsplayers
+USING(playerid)
+JOIN halloffame
+USING(playerid)
+WHERE awardid = 'Cy Young Award'
+ORDER by throws 
+
+-- Right-handed pitchers are still more likely to win the Cy Young Award and to be inducted into the Hall of Fame. This could be due to how rare rare left-handed pitchers are (3k vs 14k)
+
+
+
+
