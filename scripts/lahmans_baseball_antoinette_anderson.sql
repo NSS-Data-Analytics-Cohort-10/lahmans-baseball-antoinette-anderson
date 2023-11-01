@@ -217,13 +217,14 @@ FROM people
 Where throws ='R'
 
 
-SELECT namefirst, namelast, throws, awardid, inducted
+SELECT DISTINCT namefirst, namelast, throws, awardid, inducted
 FrOM people
 JOIN awardsplayers
 USING(playerid)
 JOIN halloffame
 USING(playerid)
 WHERE awardid = 'Cy Young Award'
+AND inducted = 'Y'
 ORDER by throws 
 
 -- Right-handed pitchers are still more likely to win the Cy Young Award and to be inducted into the Hall of Fame. This could be due to how rare rare left-handed pitchers are (3k vs 14k)
